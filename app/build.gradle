@@ -4,12 +4,14 @@ plugins {
 
 android {
     namespace 'com.vchristina02.papyrusreader'
-    compileSdk 36
+    //noinspection GradleDependency
+    compileSdk = 35
 
     defaultConfig {
         applicationId "com.vchristina02.papyrusreader"
         minSdk 24
-        targetSdk 36
+        //noinspection OldTargetApi
+        targetSdk 35
         versionCode 1
         versionName "1.0"
 
@@ -37,5 +39,7 @@ dependencies {
     testImplementation libs.junit
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core
-    implementation("com.itextpdf:itextg:5.5.10")
+    implementation(libs.itextg)
+    implementation(libs.webkit)
+
 }
