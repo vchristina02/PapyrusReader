@@ -1,3 +1,4 @@
 <resources>
-    <string name="app_name">ePapyrus</string>
+    <string name="app_name">Papyrus</string>
+    <string name="pdf_image">Imagem do PDF</string>
 </resources>
