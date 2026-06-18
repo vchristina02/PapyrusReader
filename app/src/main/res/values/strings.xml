@@ -1,4 +1,7 @@
 <resources>
-    <string name="app_name">Papyrus</string>
+    <string name="app_name" translatable="false">Papyrus</string>
     <string name="pdf_image">Imagem do PDF</string>
+    <string name="abrir_pdf">Abrir PDF</string>
+    <string name="lendo_agora">Lendo agora</string>
+    <string name="back_button">Botão voltar</string>
 </resources>
