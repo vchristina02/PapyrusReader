@@ -25,6 +25,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <!-- Toolbar para pesquisa -->
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
@@ -37,28 +38,47 @@
 
         <ImageButton
             android:id="@+id/backButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:layout_gravity="start"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:backgroundTint="#FFFFFF"
-            android:contentDescription="@string/back_button"
-            android:src="?attr/homeAsUpIndicator" />
+            android:src="?attr/homeAsUpIndicator"
+            android:contentDescription="@string/back_button_description"
+            app:tint="@color/white"
+            android:padding="8dp" />
 
         <TextView
             android:id="@+id/pdfNameTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="30dp"
-            android:textColor="#FFFFFF" />
+            android:layout_marginEnd="50dp"
+            android:text="@string/pdf_name"
+            android:textColor="#FFFFFF"
+            android:maxLines="1"
+            android:ellipsize="end"
+            app:layout_constraintEnd_toStartOf="@id/backButton"
+            app:layout_constraintStart_toEndOf="@id/searchView"
+            app:layout_constraintTop_toTopOf="parent" />
 
+        <!-- SearchView para pesquisa de texto -->
+        <ImageButton
+            android:id="@+id/searchView"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_gravity="end"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/search_button_desc"
+            android:paddingEnd="8dp"
+            android:src="?android:attr/actionModeWebSearchDrawable"
+            app:tint="@color/white"
+            tools:ignore="RtlSymmetry" />
     </androidx.appcompat.widget.Toolbar>
 
     <SeekBar
         android:id="@+id/seekBar"
         android:layout_width="match_parent"
         android:layout_height="50dp"
-        android:layout_alignParentBottom="true"
         android:orientation="horizontal"
         android:paddingStart="20dp"
         android:paddingEnd="20dp"
@@ -68,5 +88,93 @@
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
+
+    <!-- Barra Flutuante com Botões e SearchView -->
+    <LinearLayout
+        android:id="@+id/floatButtonBar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="gone"
+        android:paddingLeft="12dp"
+        android:paddingRight="12dp"
+        android:layout_margin="12dp"
+        android:background="@drawable/rounded_background"
+        app:layout_constraintTop_toBottomOf="@id/toolbar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- SearchView -->
+        <androidx.appcompat.widget.SearchView
+            android:id="@+id/searchViewFloating"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:queryHint="Buscar no texto..."
+            android:background="@color/gray"
+            app:tint="@color/black"
+            android:iconifiedByDefault="false"
+            app:iconifiedByDefault="false"
+            app:searchIcon="@null"
+            app:closeIcon="@null" />
+
+        <!-- Segunda linha com botões e contagem de itens -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:paddingTop="8dp"> <!-- Espaçamento para separar da SearchView -->
+
+            <!-- Contagem de itens -->
+            <TextView
+                android:id="@+id/itemCountTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="16sp"
+                android:paddingEnd="8dp"
+                android:text="0/0"
+                tools:ignore="HardcodedText,RtlSymmetry" /> <!-- Inicializa com "0/0" -->
+
+            <!-- Divisória -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="|"
+                android:textSize="18sp"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                tools:ignore="HardcodedText" />
+
+            <!-- Botões de navegação -->
+            <ImageButton
+                android:id="@+id/upButton"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginEnd="8dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/arrow_up_desc"
+                android:src="@drawable/arrow_up"
+                android:scaleType="fitCenter" />
+
+            <ImageButton
+                android:id="@+id/downButton"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginEnd="8dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/arrow_down_desc"
+                android:src="@drawable/arrow_down"
+                android:scaleType="fitCenter" />
+
+            <ImageButton
+                android:id="@+id/closeButton"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/close_button_desc"
+                android:scaleType="fitCenter"
+                android:src="@drawable/close" />
+        </LinearLayout>
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

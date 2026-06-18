@@ -4,4 +4,11 @@
     <string name="abrir_pdf">Abrir PDF</string>
     <string name="lendo_agora">Lendo agora</string>
     <string name="back_button">Botão voltar</string>
+    <string name="back_button_description">Botão voltar</string>
+    <string name="pdf_name">Nome do PDF</string>
+    <string name="arrow_up_desc">Botão para cima</string>
+    <string name="arrow_down_desc">Botão para baixo</string>
+    <string name="close_button_desc">Botão para fechar a barra de pesquisa</string>
+    <string name="search_button_desc">Botão para fechar a barra de pesquisa</string>
+
 </resources>
