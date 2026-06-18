@@ -16,16 +16,19 @@ public interface PdfContentDao {
     List<PdfContent> getAll();
 
     @Query("SELECT * FROM pdfcontent WHERE title = :title")
-    PdfContent getByTitle(String title);
+    PdfContent getByTitle(String title); // Adicione este método
 
     @Insert
     void insert(PdfContent pdfContent);
 
     @Update
-    void update(PdfContent pdfContent);
+    void update(PdfContent pdfContent); // Adicione este método
 
     @Delete
     void delete(PdfContent pdfContent);
+
+    @Query("DELETE FROM pdfcontent WHERE title = :title")
+    void deleteByName(String title);
 }
 
 

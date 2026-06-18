@@ -4,32 +4,41 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
-    <!-- ImageView para exibir a imagem -->
-    <ImageView
-        android:id="@+id/imageViewPdf"
-        android:layout_width="150dp"
-        android:layout_height="150dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="8dp"
-        android:layout_marginEnd="8dp"
-        android:contentDescription="@string/pdf_image"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent" />
-
-    <!-- TextView para exibir o nome do PDF -->
-    <TextView
-        android:id="@+id/textViewPdfName"
+    <!-- LinearLayout para envolver a imagem e o texto -->
+    <LinearLayout
+        android:id="@+id/containerLayout"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="8dp"
-        android:layout_marginStart="8dp"
-        android:textSize="16sp"
-        android:textColor="@android:color/black"
-        app:layout_constraintStart_toEndOf="@+id/imageViewPdf"
+        android:orientation="horizontal"
+        android:background="@drawable/rouded_backgroud"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="0dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="0dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp">
+
+        <!-- ImageView para exibir a imagem -->
+        <ImageView
+            android:id="@+id/imageViewPdf"
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:contentDescription="@string/pdf_image"
+            android:layout_marginEnd="2dp"/>
+
+        <!-- TextView para exibir o nome do PDF -->
+        <TextView
+            android:id="@+id/textViewPdfName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:textSize="20sp"
+            android:textColor="@android:color/white"
+            android:layout_weight="1"
+            android:gravity="start|center_vertical"/>
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
