@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name" translatable="false">PdfView</string>
+    <string name="app_name" translatable="false">Papyrus</string>
     <string name="pdf_image">Imagem do PDF</string>
     <string name="back_button_description">Botão voltar</string>
     <string name="pdf_name">Nome do PDF</string>
