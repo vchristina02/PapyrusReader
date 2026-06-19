@@ -10,25 +10,19 @@ import java.util.List;
 
 @Dao
 public interface PdfContentDao {
-    @Query("SELECT * FROM pdfcontent WHERE id = :id")
-    PdfContent getById(long id);
-    @Query("SELECT * FROM pdfcontent")
+    @Query("SELECT * FROM pdfcontent ORDER BY last_time_opened DESC")
     List<PdfContent> getAll();
 
     @Query("SELECT * FROM pdfcontent WHERE title = :title")
-    PdfContent getByTitle(String title); // Adicione este método
+    PdfContent getByTitle(String title);
 
     @Insert
     void insert(PdfContent pdfContent);
 
     @Update
-    void update(PdfContent pdfContent); // Adicione este método
+    void update(PdfContent pdfContent);
 
     @Delete
     void delete(PdfContent pdfContent);
-
-    @Query("DELETE FROM pdfcontent WHERE title = :title")
-    void deleteByName(String title);
 }
-
 

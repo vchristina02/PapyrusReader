@@ -2,6 +2,7 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mainLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/item_background"
@@ -9,40 +10,44 @@
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewPdf"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         android:layout_marginStart="5dp"
         android:layout_marginTop="5dp"
         android:layout_marginEnd="5dp"
-        android:layout_marginBottom="65dp"
         android:background="@color/item_background"
+        app:layout_constraintBottom_toTopOf="@+id/bottom_bar_view"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <View
+        android:id="@+id/bottom_bar_view"
+        android:layout_width="0dp"
+        android:layout_height="60dp"
+        android:background="@color/bottom_bar"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="1.0" />
+        app:layout_constraintStart_toStartOf="parent" />
 
     <TextView
         android:id="@+id/textView"
-        android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:background="@color/bottom_bar"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         android:gravity="center_vertical"
         android:paddingStart="30dp"
+        android:paddingEnd="30dp"
         android:shadowColor="#5C5C5C"
         android:shadowDx="0.5"
         android:shadowDy="0.5"
         android:shadowRadius="2"
-        android:text="Lendo agora"
+        android:text="@string/reading_now"
         android:textColor="@color/white"
         android:textSize="20sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/recyclerViewPdf"
-        app:layout_constraintVertical_bias="1.0" />
+        app:layout_constraintTop_toTopOf="@id/bottom_bar_view"
+        app:layout_constraintBottom_toBottomOf="@id/bottom_bar_view"
+        app:layout_constraintStart_toStartOf="@id/bottom_bar_view"
+        app:layout_constraintEnd_toStartOf="@+id/buttonOpenPdf"/>
 
     <Button
         android:id="@+id/buttonOpenPdf"
@@ -50,59 +55,51 @@
         android:layout_height="60dp"
         android:layout_marginEnd="20dp"
         android:background="@android:color/transparent"
-        android:backgroundTint="#FFFFFF"
-        android:contentDescription="Abrir PDF"
-        android:drawablePadding="20dp"
-        android:src="?attr/homeAsUpIndicator"
+        android:contentDescription="@string/add_pdf_description"
         app:icon="@android:drawable/ic_input_add"
         app:iconSize="30dp"
         app:iconTint="@color/white"
-        app:iconTintMode="src_in"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:tint="@color/white" />
+        app:layout_constraintTop_toTopOf="@id/bottom_bar_view"/>
 
     <TextView
         android:id="@+id/textViewEmpty"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:layout_marginBottom="60dp"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         android:background="@color/item_background"
-        android:visibility="gone"
-        android:textAlignment="center"
-        android:textSize="20sp"
+        android:gravity="center"
+        android:text="@string/empty_list_message"
         android:textColor="@color/white"
-        android:text="Os livros adicionados aparecerão aqui"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:textSize="20sp"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/bottom_bar_view"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"/>
+        app:layout_constraintEnd_toEndOf="parent"/>
 
     <LinearLayout
         android:id="@+id/loadingLayout"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:layout_marginBottom="60dp"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         android:background="@color/item_background"
+        android:gravity="center"
+        android:orientation="vertical"
         android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/bottom_bar_view"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" >
+        app:layout_constraintEnd_toEndOf="parent">
 
         <TextView
             android:id="@+id/textViewMessage"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAlignment="center"
-            android:textSize="20sp"
-            android:textColor="@color/white"
             android:gravity="center"
-            android:text="Fazendo o download do arquivo"/>
+            android:text="@string/processing_file"
+            android:textAlignment="center"
+            android:textColor="@color/white"
+            android:textSize="20sp" />
 
         <ProgressBar
             android:id="@+id/progressBar"

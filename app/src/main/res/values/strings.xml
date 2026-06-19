@@ -1,14 +1,22 @@
 <resources>
     <string name="app_name" translatable="false">Papyrus</string>
     <string name="pdf_image">Imagem do PDF</string>
-    <string name="abrir_pdf">Abrir PDF</string>
-    <string name="lendo_agora">Lendo agora</string>
-    <string name="back_button">Botão voltar</string>
     <string name="back_button_description">Botão voltar</string>
     <string name="pdf_name">Nome do PDF</string>
     <string name="arrow_up_desc">Botão para cima</string>
     <string name="arrow_down_desc">Botão para baixo</string>
     <string name="close_button_desc">Botão para fechar a barra de pesquisa</string>
-    <string name="search_button_desc">Botão para fechar a barra de pesquisa</string>
-
+    <string name="search_button_desc">Botão de pesquisa</string>
+    <string name="reading_now">Lendo agora</string>
+    <string name="add_pdf_description">Abrir PDF</string>
+    <string name="empty_list_message">Os livros adicionados aparecerão aqui</string>
+    <string name="processing_file">Processando o arquivo…</string>
+    <string name="follow_system_theme">Seguir tema do sistema</string>
+    <string name="reading_settings_description">Configurações de Leitura</string>
+    <string name="page_color">Cor da página</string>
+    <string name="font">Fonte</string>
+    <string name="decrease_font">Aa-</string>
+    <string name="increase_font">Aa+</string>
+    <string name="serif_font">Com serifa</string>
+    <string name="sans_serif_font">Sem serifa</string>
 </resources>
