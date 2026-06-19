@@ -42,6 +42,7 @@ dependencies {
     implementation(libs.itextg)
     implementation(libs.webkit)
     implementation(libs.gson)
+    implementation(libs.glide)
 
     implementation (libs.room.runtime)
     annotationProcessor (libs.androidx.room.compiler)
