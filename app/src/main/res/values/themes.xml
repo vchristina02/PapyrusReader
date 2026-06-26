@@ -1,12 +1,11 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
     <style name="Base.Theme.PapyrusReader" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+
         <item name="android:windowBackground">#FFFFDF</item>
-        <item name="colorPrimary">@color/white</item> <!-- Cor primária do aplicativo -->
-        <item name="colorPrimaryDark">@color/primary_color</item> <!-- Cor da barra de status -->
-        <item name="colorAccent">@color/accent_color</item> <!-- Cor de destaque -->
+
+        <item name="colorPrimary">@color/white</item>
+        <item name="colorPrimaryDark">@color/primary_color</item> <item name="colorAccent">@color/accent_color</item>
+
         <item name="pdfTextColor">#000000</item>
     </style>
 
