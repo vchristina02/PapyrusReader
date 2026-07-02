@@ -1,5 +1,5 @@
 [versions]
-agp = "8.13.2"
+agp = "9.2.1"
 glide = "5.0.7"
 gson = "2.14.0"
 itextg = "5.5.10"
@@ -7,12 +7,14 @@ junit = "4.13.2"
 junitVersion = "1.3.0"
 espressoCore = "3.7.0"
 appcompat = "1.7.1"
-material = "1.13.0"
-activity = "1.9.3"
+material = "1.14.0"
+activity = "1.13.0"
 constraintlayout = "2.2.1"
-roomRuntime = "2.6.1"
-roomTesting = "2.6.1"
-webkit = "1.15.0"
+roomRuntime = "2.8.4"
+roomTesting = "2.8.4"
+webkit = "1.16.0"
+android-pdf-viewer = "3.2.0-beta.3"
+epublib = "3.1"
 
 [libraries]
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomRuntime" }
@@ -29,6 +31,8 @@ activity = { group = "androidx.activity", name = "activity", version.ref = "acti
 constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
 room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomRuntime" }
 webkit = { module = "androidx.webkit:webkit", version.ref = "webkit" }
+androidPdfViewer = { group = "com.github.mhiew", name = "android-pdf-viewer", version.ref = "android-pdf-viewer" }
+epublibCore = { group = "nl.siegmann.epublib", name = "epublib-core", version.ref = "epublib" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

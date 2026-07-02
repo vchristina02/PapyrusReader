@@ -99,7 +99,7 @@ public class Pdf extends AppCompatActivity {
 
         // Inicializa o banco com migração destrutiva por segurança de esquema
         db = Room.databaseBuilder(getApplicationContext(),
-                AppDatabase.class, "pdf-content-database").fallbackToDestructiveMigration().build();
+                AppDatabase.class, "pdf-content-database").fallbackToDestructiveMigration(true).build();
         pdfName = getIntent().getStringExtra("pdfName");
 
         // Inicializa SharedPreferences e painel de leitura

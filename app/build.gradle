@@ -3,15 +3,15 @@ plugins {
 }
 
 android {
-    namespace 'com.vchristina02.papyrusreader'
+    namespace = 'com.vchristina02.papyrusreader'
     //noinspection GradleDependency
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId "com.vchristina02.papyrusreader"
         minSdk 24
         //noinspection OldTargetApi
-        targetSdk 35
+        targetSdk 36
         versionCode 1
         versionName "1.0"
 
@@ -43,6 +43,12 @@ dependencies {
     implementation(libs.webkit)
     implementation(libs.gson)
     implementation(libs.glide)
+    implementation(libs.androidPdfViewer)
+
+    implementation(libs.epublibCore) {
+        exclude group: 'org.slf4j', module: 'slf4j-android'
+        exclude group: 'xmlpull', module: 'xmlpull'
+    }
 
     implementation (libs.room.runtime)
     annotationProcessor (libs.androidx.room.compiler)

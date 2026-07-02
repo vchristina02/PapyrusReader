@@ -113,7 +113,7 @@ public class MainActivity extends AppCompatActivity {
      */
     private void initializeDatabase() {
         db = Room.databaseBuilder(getApplicationContext(),
-                AppDatabase.class, "pdf-content-database").fallbackToDestructiveMigration().build();
+                AppDatabase.class, "pdf-content-database").fallbackToDestructiveMigration(true).build();
     }
 
     /**
