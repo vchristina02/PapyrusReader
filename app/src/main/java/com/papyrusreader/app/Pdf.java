@@ -69,6 +69,16 @@ public class Pdf extends AppCompatActivity {
     /** Total de páginas do PDF carregado na PDFView, usado para converter progresso da SeekBar em página. */
     private int pdfTotalPages = 0;
 
+    /** Preferência de modo de visualização deste livro, carregada do Room (true = PDF Original). */
+    private boolean isPdfModePreferred = false;
+
+    /**
+     * Verdadeiro enquanto o Switch está sendo ajustado programaticamente (restaurando a
+     * preferência salva ao abrir o livro) — evita que esse ajuste seja interpretado como
+     * uma escolha do usuário e regravado no banco desnecessariamente.
+     */
+    private boolean isApplyingSavedPreferences = false;
+
     /** Evita recarregar o arquivo na PDFView toda vez que o usuário alterna o Switch. */
     private boolean isOriginalPdfLoaded = false;
 
@@ -393,9 +403,25 @@ public class Pdf extends AppCompatActivity {
                 initialScrollY = pdfContent.scrollPosition;
                 pdfFilePath = pdfContent.filePath;
                 pdfPageNumber = pdfContent.pdfPageNumber;
-                handler.post(this::applyPreferencesToWebView);
+                pdfTotalPages = pdfContent.pdfTotalPages;
+                isPdfModePreferred = pdfContent.isPdfModePreferred;
+                handler.post(() -> {
+                    applyPreferencesToWebView();
+                    applySavedViewModePreference();
+                });
             }
         });
+    }
+
+    /**
+     * Restaura o modo de visualização salvo para este livro (WebView por padrão,
+     * ou PDFView se o usuário já tiver preferido o "Modo PDF Original" antes).
+     * O ajuste do Switch é feito de forma programática, sem regravar a preferência.
+     */
+    private void applySavedViewModePreference() {
+        isApplyingSavedPreferences = true;
+        switchOriginalPdf.setChecked(isPdfModePreferred);
+        isApplyingSavedPreferences = false;
     }
 
     /** Salva as opções visuais atuais nas Preferências do Aparelho. */
@@ -459,6 +485,7 @@ public class Pdf extends AppCompatActivity {
                     pdfContent.scrollPosition = finalScrollY;
                     pdfContent.progress = Math.max(0, Math.min(100, progress));
                     pdfContent.pdfPageNumber = pdfPageNumber;
+                    pdfContent.pdfTotalPages = pdfTotalPages;
                     pdfContent.lastTimeOpened = System.currentTimeMillis();
                     db.pdfContentDao().update(pdfContent);
                 }
@@ -486,6 +513,7 @@ public class Pdf extends AppCompatActivity {
                     pdfContent.scrollPosition = finalScrollY;
                     pdfContent.progress = Math.max(0, Math.min(100, progress));
                     pdfContent.pdfPageNumber = pdfPageNumber;
+                    pdfContent.pdfTotalPages = pdfTotalPages;
                     db.pdfContentDao().update(pdfContent);
                 }
             });
@@ -535,6 +563,24 @@ public class Pdf extends AppCompatActivity {
                 showOriginalPdfView();
             } else {
                 showTextReflowView();
+            }
+
+            if (!isApplyingSavedPreferences) {
+                saveViewModePreference(isChecked);
+            }
+        });
+    }
+
+    /**
+     * Grava no Room qual modo de visualização deve ser usado da próxima vez que este
+     * livro for reaberto (chamado apenas quando o próprio usuário mexe no Switch).
+     */
+    private void saveViewModePreference(boolean isPdfModePreferred) {
+        executor.execute(() -> {
+            PdfContent pdfContent = db.pdfContentDao().getByTitle(pdfName);
+            if (pdfContent != null) {
+                pdfContent.isPdfModePreferred = isPdfModePreferred;
+                db.pdfContentDao().update(pdfContent);
             }
         });
     }

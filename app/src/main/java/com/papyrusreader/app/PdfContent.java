@@ -63,4 +63,20 @@ public class PdfContent {
      */
     @ColumnInfo(name = "pdf_page_number")
     public int pdfPageNumber;
+
+    /**
+     * Total de páginas do arquivo PDF original, capturado quando a PDFView carrega o
+     * documento. Junto com pdfPageNumber, permite calcular o progresso percentual do
+     * "Modo PDF Original" para exibir na barra de progresso do card, na tela inicial.
+     */
+    @ColumnInfo(name = "pdf_total_pages")
+    public int pdfTotalPages;
+
+    /**
+     * Preferência de modo de visualização deste livro: true = "Modo PDF Original" (PDFView),
+     * false = "Modo Texto" (WebView, valor padrão para livros recém-importados).
+     * Restaurada automaticamente toda vez que o livro é reaberto.
+     */
+    @ColumnInfo(name = "is_pdf_mode_preferred")
+    public boolean isPdfModePreferred;
 }

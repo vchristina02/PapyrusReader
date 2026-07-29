@@ -4,6 +4,9 @@ import android.app.Activity;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.graphics.pdf.PdfRenderer;
 import android.net.Uri;
 import android.os.Bundle;
@@ -240,12 +243,66 @@ public class MainActivity extends AppCompatActivity {
      * Configura o gesto de deslizar para excluir (Swipe to Delete).
      * Inclui uma camada de segurança com um Snackbar que permite "Desfazer" a ação.
      */
+    /**
+     * Aplica o feedback visual de "Swipe to Delete" ao card: sobrepõe um tom de
+     * vermelho escuro (crescente com o progresso do arraste) e reduz levemente o alpha.
+     * Chamado tanto durante o arraste (onChildDraw) quanto para resetar o estado (clearView).
+     *
+     * @param cardContainer view do card que recebe o efeito (containerLayout do item_pdf.xml)
+     * @param swipeProgress  0f (parado/normal) até 1f (totalmente arrastado)
+     */
+    private void applySwipeVisualFeedback(View cardContainer, float swipeProgress) {
+        if (cardContainer == null || cardContainer.getBackground() == null) return;
+
+        if (swipeProgress <= 0f) {
+            cardContainer.getBackground().clearColorFilter();
+        } else {
+            int overlayAlpha = (int) (swipeProgress * 200); // até ~78% de opacidade no vermelho
+            int darkRed = Color.argb(overlayAlpha, 139, 0, 0);
+            cardContainer.getBackground().mutate().setColorFilter(darkRed, PorterDuff.Mode.SRC_ATOP);
+        }
+
+        cardContainer.setAlpha(1f - (swipeProgress * 0.3f)); // até 70% de opacidade no arraste máximo
+    }
+
     private void setupItemTouchHelper() {
         ItemTouchHelper.SimpleCallback itemTouchHelperCallback =
                 new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
                     @Override
                     public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
                         return false; // Não suportamos arrastar para reordenar
+                    }
+
+                    /**
+                     * Escurece e esmaece gradativamente o CARD em si (não apenas o fundo revelado
+                     * atrás dele) conforme o usuário arrasta para excluir. A cor é sobreposta via
+                     * ColorFilter (modo SRC_ATOP), o que preserva o formato do drawable de fundo
+                     * (cantos arredondados) sem precisar conhecer sua cor original.
+                     */
+                    @Override
+                    public void onChildDraw(@NonNull Canvas c, @NonNull RecyclerView recyclerView,
+                                            @NonNull RecyclerView.ViewHolder viewHolder,
+                                            float dX, float dY, int actionState, boolean isCurrentlyActive) {
+
+                        if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
+                            View cardContainer = viewHolder.itemView.findViewById(R.id.containerLayout);
+                            float swipeProgress = Math.min(Math.abs(dX) / (float) viewHolder.itemView.getWidth(), 1f);
+
+                            applySwipeVisualFeedback(cardContainer, swipeProgress);
+                        }
+
+                        super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
+                    }
+
+                    /**
+                     * Restaura a aparência normal do card assim que o gesto termina — seja porque
+                     * o item foi excluído, seja porque o usuário soltou antes de completar o swipe.
+                     */
+                    @Override
+                    public void clearView(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder) {
+                        super.clearView(recyclerView, viewHolder);
+                        View cardContainer = viewHolder.itemView.findViewById(R.id.containerLayout);
+                        applySwipeVisualFeedback(cardContainer, 0f);
                     }
 
                     @Override

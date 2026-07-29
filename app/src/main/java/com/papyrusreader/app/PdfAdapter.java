@@ -47,7 +47,7 @@ public class PdfAdapter extends ListAdapter<PdfContent, PdfAdapter.ViewHolder> {
 
         // Preenche os textos e o progresso da barra de leitura
         holder.textViewPdfName.setText(currentItem.title);
-        holder.seekBar.setProgress(currentItem.progress);
+        holder.seekBar.setProgress(calculateDisplayProgress(currentItem));
 
         // Desativa a interação manual na miniatura da SeekBar da tela inicial
         holder.seekBar.setClickable(false);
@@ -77,6 +77,20 @@ public class PdfAdapter extends ListAdapter<PdfContent, PdfAdapter.ViewHolder> {
                 }
             }
         });
+    }
+
+    /**
+     * Calcula o progresso (0-100) a ser exibido no card, de acordo com o modo de
+     * visualização preferido para este livro:
+     * - "Modo PDF Original": calculado a partir da página atual / total de páginas.
+     * - "Modo Texto" (padrão): usa o progresso de rolagem da WebView já salvo em `progress`.
+     */
+    private int calculateDisplayProgress(PdfContent pdfContent) {
+        if (pdfContent.isPdfModePreferred && pdfContent.pdfTotalPages > 0) {
+            float pagesRead = pdfContent.pdfPageNumber + 1;
+            return (int) Math.min(100, (100 * pagesRead / pdfContent.pdfTotalPages));
+        }
+        return pdfContent.progress;
     }
 
     /**
@@ -128,6 +142,9 @@ public class PdfAdapter extends ListAdapter<PdfContent, PdfAdapter.ViewHolder> {
                 @Override
                 public boolean areContentsTheSame(@NonNull PdfContent oldItem, @NonNull PdfContent newItem) {
                     return oldItem.progress == newItem.progress &&
+                            oldItem.pdfPageNumber == newItem.pdfPageNumber &&
+                            oldItem.pdfTotalPages == newItem.pdfTotalPages &&
+                            oldItem.isPdfModePreferred == newItem.isPdfModePreferred &&
                             Objects.equals(oldItem.title, newItem.title) &&
                             Objects.equals(oldItem.imagePath, newItem.imagePath);
                 }
