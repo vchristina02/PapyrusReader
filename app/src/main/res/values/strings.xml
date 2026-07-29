@@ -13,6 +13,7 @@
     <string name="increase_font">Aa+</string>
     <string name="serif_font">Com serifa</string>
     <string name="sans_serif_font">Sem serifa</string>
+    <string name="view_original_pdf">Visualizar PDF Original</string>
 
     <string name="pdf_image">Imagem do PDF</string>
     <string name="back_button_description">Botão voltar</string>

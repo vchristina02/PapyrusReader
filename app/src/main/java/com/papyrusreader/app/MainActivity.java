@@ -1,4 +1,4 @@
-package com.vchristina02.papyrusreader;
+package com.papyrusreader.app;
 
 import android.app.Activity;
 import android.content.Intent;

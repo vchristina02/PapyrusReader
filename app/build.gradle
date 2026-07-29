@@ -3,12 +3,12 @@ plugins {
 }
 
 android {
-    namespace = 'com.vchristina02.papyrusreader'
+    namespace = 'com.papyrusreader.app'
     //noinspection GradleDependency
     compileSdk = 36
 
     defaultConfig {
-        applicationId "com.vchristina02.papyrusreader"
+        applicationId 'com.papyrusreader.app'
         minSdk 24
         //noinspection OldTargetApi
         targetSdk 36

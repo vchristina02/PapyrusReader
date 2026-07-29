@@ -1,4 +1,4 @@
-package com.vchristina02.papyrusreader;
+package com.papyrusreader.app;
 
 import androidx.room.Database;
 import androidx.room.RoomDatabase;

@@ -1,4 +1,4 @@
-package com.vchristina02.papyrusreader;
+package com.papyrusreader.app;
 
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;

@@ -1,4 +1,4 @@
-package com.vchristina02.papyrusreader;
+package com.papyrusreader.app;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -20,6 +20,7 @@ import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import androidx.appcompat.widget.SearchView;
 import android.widget.TextView;
+import android.widget.EditText;
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -74,8 +75,9 @@ public class Pdf extends AppCompatActivity {
     private View colorWhite, colorBlack, colorSepia;
     private LinearLayout colorOptions;
     private MaterialButton btnDecreaseFont, btnIncreaseFont, btnToggleFontFamily;
-    private SwitchMaterial switchFollowSystemTheme;
-    private TextView labelFollowSystemTheme, labelPageColor, labelFont;
+    private SwitchMaterial switchFollowSystemTheme, switchOriginalPdf;
+    private TextView labelFollowSystemTheme, labelPageColor, labelFont, labelOriginalPdf;
+    private com.github.barteksc.pdfviewer.PDFView pdfView;
 
     /** Variáveis de estado das preferências de leitura. */
     private int currentFontSize;
@@ -195,6 +197,7 @@ public class Pdf extends AppCompatActivity {
         });
 
         setupSearchFunctionality();
+        setupViewModeLogic();
     }
 
     /** Vincula os elementos de interface do menu de configurações visuais. */
@@ -209,10 +212,12 @@ public class Pdf extends AppCompatActivity {
         btnIncreaseFont = findViewById(R.id.buttonIncreaseFont);
         btnToggleFontFamily = findViewById(R.id.buttonToggleFontFamily);
         switchFollowSystemTheme = findViewById(R.id.switchFollowSystemTheme);
-
+        switchOriginalPdf = findViewById(R.id.switchOriginalPdf);
+        labelOriginalPdf = findViewById(R.id.labelOriginalPdf);
         labelFollowSystemTheme = findViewById(R.id.labelFollowSystemTheme);
         labelPageColor = findViewById(R.id.labelPageColor);
         labelFont = findViewById(R.id.labelFont);
+        pdfView = findViewById(R.id.pdfView);
     }
 
     /** Carrega as configurações de leitura salvas no dispositivo via SharedPreferences. */
@@ -252,7 +257,9 @@ public class Pdf extends AppCompatActivity {
 
         readingSettingsPanel.setBackgroundColor(panelColor);
 
+        labelOriginalPdf.setTextColor(textColor);
         labelFollowSystemTheme.setTextColor(textColor);
+        labelOriginalPdf.setTextColor(textColor);
         labelPageColor.setTextColor(textColor);
         labelFont.setTextColor(textColor);
         switchFollowSystemTheme.setTextColor(textColor);
@@ -469,6 +476,11 @@ public class Pdf extends AppCompatActivity {
     private void setupSearchFunctionality() {
         floatButtonBar = findViewById(R.id.floatButtonBar);
         searchViewFloating = findViewById(R.id.searchViewFloating);
+
+        EditText searchEditText = searchViewFloating.findViewById(androidx.appcompat.R.id.search_src_text);
+        searchEditText.setTextColor(Color.WHITE);
+        searchEditText.setHintTextColor(Color.LTGRAY);
+
         ImageButton upButton = findViewById(R.id.upButton);
         ImageButton downButton = findViewById(R.id.downButton);
         ImageButton closeButton = findViewById(R.id.closeButton);
@@ -494,6 +506,29 @@ public class Pdf extends AppCompatActivity {
             floatButtonBar.setVisibility(View.GONE);
             searchViewFloating.setQuery("", false);
             clearHighlights();
+        });
+    }
+
+    private void setupViewModeLogic() {
+        switchOriginalPdf.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked) {
+                // MODO PDF ORIGINAL: Esconde texto, mostra PDF
+                webView.setVisibility(View.GONE);
+                pdfView.setVisibility(View.VISIBLE);
+
+                // Aqui você carregaria o arquivo real:
+                // pdfView.fromFile(new File(caminhoDoSeuPdf)).load();
+
+                // Esconde os controles de texto que não funcionam no PDF original
+                findViewById(R.id.textSettingsGroup).setVisibility(View.GONE);
+            } else {
+                // MODO TEXTO (REFLOW): Mostra texto, esconde PDF
+                webView.setVisibility(View.VISIBLE);
+                pdfView.setVisibility(View.GONE);
+
+                // Mostra os controles de texto novamente
+                findViewById(R.id.textSettingsGroup).setVisibility(View.VISIBLE);
+            }
         });
     }
 
