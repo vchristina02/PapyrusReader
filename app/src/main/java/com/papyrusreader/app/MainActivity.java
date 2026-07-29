@@ -354,23 +354,62 @@ public class MainActivity extends AppCompatActivity {
      */
     private void processPdfContent(Uri uri, String pdfName) {
         executor.execute(() -> {
-            // Passo 1: Extrai e formata o texto para HTML
+            // Passo 1: Copia o arquivo original para o armazenamento interno.
+            // Necessário para o "Modo PDF Original", já que a content:// URI do SAF
+            // não garante permissão de leitura após o processo do app ser encerrado.
+            File pdfFile = copyPdfToInternalStorage(uri, pdfName);
+
+            // Passo 2: Extrai e formata o texto para HTML
             String formattedHtml = extractAndFormatText(uri);
 
-            // Passo 2: Renderiza a primeira página como imagem (Capa/Miniatura)
+            // Passo 3: Renderiza a primeira página como imagem (Capa/Miniatura)
             File imageFile = renderFirstPageAsImage(uri, pdfName);
 
-            // Passo 3: Salva os dados processados no Room Database
+            // Passo 4: Salva os dados processados no Room Database
             if (formattedHtml != null) {
-                saveNewPdfToDatabase(pdfName, formattedHtml, imageFile);
+                saveNewPdfToDatabase(pdfName, formattedHtml, imageFile, pdfFile);
             }
 
-            // Passo 4: Retorna para a Main Thread para fechar o loading e recarregar a lista
+            // Passo 5: Retorna para a Main Thread para fechar o loading e recarregar a lista
             handler.post(() -> {
                 hideLoading();
                 loadPdfContentsFromDatabase();
             });
         });
+    }
+
+    /**
+     * Copia o conteúdo binário do PDF importado (recebido como content:// URI via SAF)
+     * para um arquivo permanente dentro do armazenamento interno do app (getFilesDir()/pdfs).
+     * Essa cópia é o que a AndroidPdfViewer usará via fromFile() no "Modo PDF Original".
+     *
+     * @return O File resultante em armazenamento interno, ou null em caso de falha.
+     */
+    private File copyPdfToInternalStorage(Uri uri, String pdfName) {
+        File pdfDirectory = new File(getFilesDir(), "pdfs");
+        if (!pdfDirectory.exists() && !pdfDirectory.mkdirs()) {
+            Log.e("MainActivity", "Não foi possível criar o diretório interno de PDFs");
+            return null;
+        }
+
+        File destinationFile = new File(pdfDirectory, pdfName);
+
+        try (InputStream inputStream = getContentResolver().openInputStream(uri);
+             FileOutputStream outputStream = new FileOutputStream(destinationFile)) {
+
+            if (inputStream == null) return null;
+
+            byte[] buffer = new byte[8192];
+            int bytesRead;
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, bytesRead);
+            }
+            return destinationFile;
+
+        } catch (IOException e) {
+            Log.e("MainActivity", "Erro ao copiar o PDF original para armazenamento interno", e);
+            return null;
+        }
     }
 
     /**
@@ -465,11 +504,12 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Persiste os dados extraídos do novo PDF (texto bruto e caminho da imagem) no banco local.
      */
-    private void saveNewPdfToDatabase(String pdfName, String formattedHtml, File imageFile) {
+    private void saveNewPdfToDatabase(String pdfName, String formattedHtml, File imageFile, File pdfFile) {
         PdfContent pdfContent = new PdfContent();
         pdfContent.title = pdfName;
         pdfContent.content = formattedHtml;
         pdfContent.imagePath = (imageFile != null) ? imageFile.getAbsolutePath() : "";
+        pdfContent.filePath = (pdfFile != null) ? pdfFile.getAbsolutePath() : "";
         pdfContent.lastTimeOpened = System.currentTimeMillis();
 
         db.pdfContentDao().insert(pdfContent);

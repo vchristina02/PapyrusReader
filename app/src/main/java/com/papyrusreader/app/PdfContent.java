@@ -45,4 +45,22 @@ public class PdfContent {
      */
     @ColumnInfo(name = "last_time_opened")
     public Long lastTimeOpened;
+
+    /**
+     * Caminho absoluto, no armazenamento interno do app, para a cópia do arquivo PDF original.
+     * É criado no momento da importação (ver MainActivity.copyPdfToInternalStorage) e é
+     * o que permite ao "Modo PDF Original" (AndroidPdfViewer) carregar o arquivo via fromFile(),
+     * já que a content:// URI original do SAF não tem permissão de leitura garantida
+     * após o processo do app ser encerrado.
+     */
+    @ColumnInfo(name = "file_path")
+    public String filePath;
+
+    /**
+     * Última página visualizada no "Modo PDF Original" (índice baseado em zero, usado
+     * diretamente pela AndroidPdfViewer). É independente de scrollPosition, que guarda
+     * a posição de rolagem usada apenas no modo texto (WebView/reflow).
+     */
+    @ColumnInfo(name = "pdf_page_number")
+    public int pdfPageNumber;
 }

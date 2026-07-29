@@ -9,7 +9,7 @@ import androidx.room.RoomDatabase;
  * * A anotação @Database define as entidades (tabelas) que pertencem a este banco
  * e a versão atual do esquema estrutural.
  */
-@Database(entities = {PdfContent.class}, version = 1, exportSchema = false)
+@Database(entities = {PdfContent.class}, version = 2, exportSchema = false)
 public abstract class AppDatabase extends RoomDatabase {
 
     /**

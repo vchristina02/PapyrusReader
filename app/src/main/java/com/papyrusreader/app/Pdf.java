@@ -18,9 +18,12 @@ import android.webkit.WebViewClient;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
+import android.widget.Toast;
 import androidx.appcompat.widget.SearchView;
 import android.widget.TextView;
 import android.widget.EditText;
+
+import java.io.File;
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -56,6 +59,19 @@ public class Pdf extends AppCompatActivity {
     private final Handler handler = new Handler(Looper.getMainLooper());
 
     private String pdfName;
+
+    /** Caminho absoluto (armazenamento interno) da cópia do PDF original, usada pela PDFView. */
+    private String pdfFilePath;
+
+    /** Última página exibida no "Modo PDF Original", restaurada/persistida junto ao PdfContent. */
+    private int pdfPageNumber = 0;
+
+    /** Total de páginas do PDF carregado na PDFView, usado para converter progresso da SeekBar em página. */
+    private int pdfTotalPages = 0;
+
+    /** Evita recarregar o arquivo na PDFView toda vez que o usuário alterna o Switch. */
+    private boolean isOriginalPdfLoaded = false;
+
     private WebView webView;
     private SeekBar seekBar;
     private GestureDetector gestureDetector;
@@ -126,15 +142,7 @@ public class Pdf extends AppCompatActivity {
         gestureDetector = new GestureDetector(this, new GestureDetector.SimpleOnGestureListener() {
             @Override
             public boolean onSingleTapConfirmed(@NonNull MotionEvent e) {
-                if (readingSettingsPanel.getVisibility() == View.VISIBLE) {
-                    readingSettingsPanel.setVisibility(View.GONE);
-                } else if (seekBar.getVisibility() == View.VISIBLE) {
-                    seekBar.setVisibility(View.GONE);
-                    toolbar.setVisibility(View.GONE);
-                } else {
-                    seekBar.setVisibility(View.VISIBLE);
-                    toolbar.setVisibility(View.VISIBLE);
-                }
+                toggleImmersiveBars();
                 return super.onSingleTapConfirmed(e);
             }
         });
@@ -154,11 +162,19 @@ public class Pdf extends AppCompatActivity {
             }
         });
 
-        // Sincroniza o arraste da SeekBar com a rolagem da WebView
+        // Sincroniza o arraste da SeekBar com a rolagem da WebView (Modo Texto)
+        // ou com a navegação de páginas da PDFView (Modo PDF Original).
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if (fromUser) {
+                if (!fromUser) return;
+
+                if (isOriginalPdfModeActive()) {
+                    if (pdfTotalPages > 0) {
+                        int targetPage = (int) ((progress / 100.0) * (pdfTotalPages - 1));
+                        pdfView.jumpTo(targetPage, true);
+                    }
+                } else {
                     float scale = webView.getResources().getDisplayMetrics().density;
                     int webViewHeight = (int) (webView.getContentHeight() * scale);
                     int scrollTo = (int) ((webViewHeight - webView.getHeight()) * (progress / 100.0));
@@ -375,6 +391,8 @@ public class Pdf extends AppCompatActivity {
             PdfContent pdfContent = db.pdfContentDao().getByTitle(pdfName);
             if (pdfContent != null) {
                 initialScrollY = pdfContent.scrollPosition;
+                pdfFilePath = pdfContent.filePath;
+                pdfPageNumber = pdfContent.pdfPageNumber;
                 handler.post(this::applyPreferencesToWebView);
             }
         });
@@ -440,6 +458,7 @@ public class Pdf extends AppCompatActivity {
                 if (pdfContent != null) {
                     pdfContent.scrollPosition = finalScrollY;
                     pdfContent.progress = Math.max(0, Math.min(100, progress));
+                    pdfContent.pdfPageNumber = pdfPageNumber;
                     pdfContent.lastTimeOpened = System.currentTimeMillis();
                     db.pdfContentDao().update(pdfContent);
                 }
@@ -466,6 +485,7 @@ public class Pdf extends AppCompatActivity {
                 if (pdfContent != null) {
                     pdfContent.scrollPosition = finalScrollY;
                     pdfContent.progress = Math.max(0, Math.min(100, progress));
+                    pdfContent.pdfPageNumber = pdfPageNumber;
                     db.pdfContentDao().update(pdfContent);
                 }
             });
@@ -512,24 +532,108 @@ public class Pdf extends AppCompatActivity {
     private void setupViewModeLogic() {
         switchOriginalPdf.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (isChecked) {
-                // MODO PDF ORIGINAL: Esconde texto, mostra PDF
-                webView.setVisibility(View.GONE);
-                pdfView.setVisibility(View.VISIBLE);
-
-                // Aqui você carregaria o arquivo real:
-                // pdfView.fromFile(new File(caminhoDoSeuPdf)).load();
-
-                // Esconde os controles de texto que não funcionam no PDF original
-                findViewById(R.id.textSettingsGroup).setVisibility(View.GONE);
+                showOriginalPdfView();
             } else {
-                // MODO TEXTO (REFLOW): Mostra texto, esconde PDF
-                webView.setVisibility(View.VISIBLE);
-                pdfView.setVisibility(View.GONE);
-
-                // Mostra os controles de texto novamente
-                findViewById(R.id.textSettingsGroup).setVisibility(View.VISIBLE);
+                showTextReflowView();
             }
         });
+    }
+
+    /**
+     * Ativa o "Modo PDF Original": esconde a WebView e os controles de texto,
+     * exibe a PDFView e dispara o carregamento do arquivo (apenas na primeira vez).
+     * Minimiza automaticamente os menus (painel de leitura, barra superior e SeekBar),
+     * entrando em modo imersivo — o usuário toca a tela para reexibi-los quando quiser.
+     */
+    private void showOriginalPdfView() {
+        webView.setVisibility(View.GONE);
+        pdfView.setVisibility(View.VISIBLE);
+        findViewById(R.id.textSettingsGroup).setVisibility(View.GONE);
+        minimizeMenus();
+
+        if (!isOriginalPdfLoaded) {
+            loadOriginalPdfFile();
+        }
+    }
+
+    /**
+     * Retorna ao "Modo Texto" (reflow): esconde a PDFView e reexibe a WebView
+     * junto com os controles de personalização de fonte/cor.
+     * Também minimiza os menus, mantendo o comportamento imersivo consistente entre os modos.
+     */
+    private void showTextReflowView() {
+        pdfView.setVisibility(View.GONE);
+        webView.setVisibility(View.VISIBLE);
+        findViewById(R.id.textSettingsGroup).setVisibility(View.VISIBLE);
+        minimizeMenus();
+    }
+
+    /** Esconde o painel de configurações de leitura, a barra superior e a SeekBar. */
+    private void minimizeMenus() {
+        readingSettingsPanel.setVisibility(View.GONE);
+        toolbar.setVisibility(View.GONE);
+        seekBar.setVisibility(View.GONE);
+    }
+
+    /**
+     * Alterna a visibilidade do painel de leitura, da barra superior e da SeekBar (Modo Imersivo).
+     * Compartilhado entre o toque na WebView (via GestureDetector) e o toque na PDFView
+     * (via callback nativo .onTap() da biblioteca) — assim nenhum dos dois modos precisa
+     * de um OnTouchListener próprio que interfira no gesto de arrastar/zoom da PDFView.
+     */
+    private void toggleImmersiveBars() {
+        if (readingSettingsPanel.getVisibility() == View.VISIBLE) {
+            readingSettingsPanel.setVisibility(View.GONE);
+        } else if (seekBar.getVisibility() == View.VISIBLE) {
+            seekBar.setVisibility(View.GONE);
+            toolbar.setVisibility(View.GONE);
+        } else {
+            seekBar.setVisibility(View.VISIBLE);
+            toolbar.setVisibility(View.VISIBLE);
+        }
+    }
+
+    /** Indica se a PDFView está atualmente em primeiro plano (Modo PDF Original ativo). */
+    private boolean isOriginalPdfModeActive() {
+        return pdfView.getVisibility() == View.VISIBLE;
+    }
+
+    /**
+     * Carrega o arquivo PDF original (copiado para armazenamento interno na importação)
+     * de forma assíncrona na PDFView, restaurando a última página lida e mantendo
+     * pdfPageNumber/pdfTotalPages e a SeekBar sincronizados a cada mudança de página.
+     */
+    private void loadOriginalPdfFile() {
+        if (pdfFilePath == null || pdfFilePath.isEmpty()) {
+            Toast.makeText(this, "Não foi possível carregar o PDF original.", Toast.LENGTH_SHORT).show();
+            switchOriginalPdf.setChecked(false);
+            return;
+        }
+
+        File pdfFile = new File(pdfFilePath);
+        if (!pdfFile.exists()) {
+            Toast.makeText(this, "Arquivo original não encontrado.", Toast.LENGTH_SHORT).show();
+            switchOriginalPdf.setChecked(false);
+            return;
+        }
+
+        pdfView.fromFile(pdfFile)
+                .defaultPage(pdfPageNumber)
+                .enableAnnotationRendering(true)
+                .onPageChange((page, pageCount) -> {
+                    pdfPageNumber = page;
+                    pdfTotalPages = pageCount;
+                    if (pageCount > 1) {
+                        seekBar.setProgress((int) (100 * (float) page / (pageCount - 1)));
+                    }
+                })
+                .onTap(motionEvent -> {
+                    toggleImmersiveBars();
+                    return true;
+                })
+                .load();
+
+        isOriginalPdfLoaded = true;
     }
 
     /** Encontra todas as ocorrências de um termo no DOM do HTML renderizado. */
