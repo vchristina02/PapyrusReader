@@ -489,11 +489,19 @@ public class Pdf extends AppCompatActivity {
                     pdfContent.lastTimeOpened = System.currentTimeMillis();
                     db.pdfContentDao().update(pdfContent);
                 }
+
+                // Só fecha a tela DEPOIS que a gravação terminar. Antes, finish() era chamado
+                // logo após o executor.execute(), sem esperar o Room terminar de escrever —
+                // a MainActivity.onResume() muitas vezes ganhava a corrida e lia o valor
+                // salvo na sessão anterior (daí o progresso aparecer sempre "atrasado").
+                handler.post(() -> {
+                    setResult(Activity.RESULT_OK, new Intent());
+                    finish();
+                });
             });
-            Intent resultIntent = new Intent();
-            setResult(Activity.RESULT_OK, resultIntent);
+        } else {
+            finish();
         }
-        finish();
     }
 
     /** Garante que o progresso é salvo mesmo se o aplicativo for minimizado (Background). */
