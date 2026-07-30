@@ -72,6 +72,9 @@ public class Pdf extends AppCompatActivity {
     /** Preferência de modo de visualização deste livro, carregada do Room (true = PDF Original). */
     private boolean isPdfModePreferred = false;
 
+    /** Tipo do arquivo deste livro ({@link PdfContent#FILE_TYPE_PDF} ou {@link PdfContent#FILE_TYPE_EPUB}). */
+    private String fileType;
+
     /**
      * Verdadeiro enquanto o Switch está sendo ajustado programaticamente (restaurando a
      * preferência salva ao abrir o livro) — evita que esse ajuste seja interpretado como
@@ -103,6 +106,7 @@ public class Pdf extends AppCompatActivity {
     private MaterialButton btnDecreaseFont, btnIncreaseFont, btnToggleFontFamily;
     private SwitchMaterial switchFollowSystemTheme, switchOriginalPdf;
     private TextView labelFollowSystemTheme, labelPageColor, labelFont, labelOriginalPdf;
+    private View viewModeToggleRow, viewModeToggleDivider;
     private com.github.barteksc.pdfviewer.PDFView pdfView;
 
     /** Variáveis de estado das preferências de leitura. */
@@ -240,6 +244,8 @@ public class Pdf extends AppCompatActivity {
         switchFollowSystemTheme = findViewById(R.id.switchFollowSystemTheme);
         switchOriginalPdf = findViewById(R.id.switchOriginalPdf);
         labelOriginalPdf = findViewById(R.id.labelOriginalPdf);
+        viewModeToggleRow = findViewById(R.id.viewModeToggleRow);
+        viewModeToggleDivider = findViewById(R.id.viewModeToggleDivider);
         labelFollowSystemTheme = findViewById(R.id.labelFollowSystemTheme);
         labelPageColor = findViewById(R.id.labelPageColor);
         labelFont = findViewById(R.id.labelFont);
@@ -405,12 +411,26 @@ public class Pdf extends AppCompatActivity {
                 pdfPageNumber = pdfContent.pdfPageNumber;
                 pdfTotalPages = pdfContent.pdfTotalPages;
                 isPdfModePreferred = pdfContent.isPdfModePreferred;
+                fileType = pdfContent.fileType;
                 handler.post(() -> {
                     applyPreferencesToWebView();
-                    applySavedViewModePreference();
+                    if (PdfContent.FILE_TYPE_EPUB.equals(fileType)) {
+                        hideOriginalPdfToggle();
+                    } else {
+                        applySavedViewModePreference();
+                    }
                 });
             }
         });
+    }
+
+    /**
+     * Remove completamente o Switch de "Visualizar PDF Original" (e sua linha divisória)
+     * do painel de configurações para livros EPUB, que rodam exclusivamente em modo texto.
+     */
+    private void hideOriginalPdfToggle() {
+        viewModeToggleRow.setVisibility(View.GONE);
+        viewModeToggleDivider.setVisibility(View.GONE);
     }
 
     /**

@@ -15,6 +15,7 @@
     <!-- MODO DE VISUALIZAÇÃO (PDF Original x Texto)-->
     <!-- ========================================== -->
     <LinearLayout
+        android:id="@+id/viewModeToggleRow"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
@@ -38,6 +39,7 @@
 
     <!-- Linha divisória para separar os escopos -->
     <View
+        android:id="@+id/viewModeToggleDivider"
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:background="#424242"

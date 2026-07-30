@@ -12,6 +12,10 @@ import androidx.room.PrimaryKey;
 @Entity
 public class PdfContent {
 
+    /** Valores possíveis para o campo fileType. */
+    public static final String FILE_TYPE_PDF = "PDF";
+    public static final String FILE_TYPE_EPUB = "EPUB";
+
     /** Chave primária única gerada automaticamente pelo Room para cada novo livro. */
     @PrimaryKey(autoGenerate = true)
     public int id;
@@ -79,4 +83,13 @@ public class PdfContent {
      */
     @ColumnInfo(name = "is_pdf_mode_preferred")
     public boolean isPdfModePreferred;
+
+    /**
+     * Tipo do arquivo original importado: {@link #FILE_TYPE_PDF} ou {@link #FILE_TYPE_EPUB}.
+     * Usado pela Pdf.java para decidir se o "Modo PDF Original" deve ficar disponível
+     * (EPUBs rodam exclusivamente em modo texto/WebView) e pelo PdfAdapter para exibir
+     * o rótulo de formato no card da tela inicial.
+     */
+    @ColumnInfo(name = "file_type")
+    public String fileType;
 }

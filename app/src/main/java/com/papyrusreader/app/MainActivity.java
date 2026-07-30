@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
@@ -39,12 +40,21 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import io.documentnode.epub4j.domain.Book;
+import io.documentnode.epub4j.domain.Resource;
+import io.documentnode.epub4j.domain.SpineReference;
+import io.documentnode.epub4j.epub.EpubReader;
 
 /**
  * Activity principal do Papyrus Reader.
@@ -132,7 +142,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Configura o botão para acionar o seletor nativo de arquivos do Android
         Button buttonOpenPdf = findViewById(R.id.buttonOpenPdf);
-        buttonOpenPdf.setOnClickListener(v -> mGetContent.launch("application/pdf"));
+        buttonOpenPdf.setOnClickListener(v -> mGetContent.launch(new String[]{"application/pdf", "application/epub+zip"}));
 
         loadingLayout = findViewById(R.id.loadingLayout);
         textViewEmpty = findViewById(R.id.textViewEmpty);
@@ -361,23 +371,36 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Contrato para abrir o seletor nativo de arquivos do sistema (SAF).
-     * Filtra apenas por arquivos "application/pdf".
+     * Aceita tanto "application/pdf" quanto "application/epub+zip" (ver initializeViews()),
+     * já que OpenDocument, diferente de GetContent, suporta múltiplos MIME types de uma vez.
      */
-    private final ActivityResultLauncher<String> mGetContent = registerForActivityResult(
-            new ActivityResultContracts.GetContent(),
+    private final ActivityResultLauncher<String[]> mGetContent = registerForActivityResult(
+            new ActivityResultContracts.OpenDocument(),
             uri -> {
                 if (uri != null) {
-                    String pdfName = getFileNameFromUri(uri);
+                    String fileName = getFileNameFromUri(uri);
 
                     // Verifica duplicidade antes de importar
-                    if (findItemByName(pdfName) == -1) {
+                    if (findItemByName(fileName) == -1) {
                         showLoading();
-                        processPdfContent(uri, pdfName);
+                        routeFileProcessing(uri, fileName);
                     } else {
-                        Toast.makeText(MainActivity.this, "Este PDF já foi adicionado", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MainActivity.this, "Este arquivo já foi adicionado", Toast.LENGTH_SHORT).show();
                     }
                 }
             });
+
+    /**
+     * Decide qual pipeline de importação usar com base na extensão do arquivo selecionado
+     * e delega o processamento correspondente (PDF ou EPUB).
+     */
+    private void routeFileProcessing(Uri uri, String fileName) {
+        if (fileName != null && fileName.toLowerCase(Locale.ROOT).endsWith(".epub")) {
+            processEpubContent(uri, fileName);
+        } else {
+            processPdfContent(uri, fileName);
+        }
+    }
 
     /**
      * Resolve a URI retornada pelo sistema para extrair o nome real do arquivo.
@@ -567,6 +590,99 @@ public class MainActivity extends AppCompatActivity {
         pdfContent.content = formattedHtml;
         pdfContent.imagePath = (imageFile != null) ? imageFile.getAbsolutePath() : "";
         pdfContent.filePath = (pdfFile != null) ? pdfFile.getAbsolutePath() : "";
+        pdfContent.fileType = PdfContent.FILE_TYPE_PDF;
+        pdfContent.lastTimeOpened = System.currentTimeMillis();
+
+        db.pdfContentDao().insert(pdfContent);
+    }
+
+    /**
+     * Orquestra o processamento completo de um novo EPUB importado.
+     * Extrai o texto/HTML de cada capítulo do Spine (epublib), gera a capa a partir do
+     * CoverImage do livro, salva no banco e atualiza a UI. Tudo em background.
+     */
+    private void processEpubContent(Uri uri, String fileName) {
+        executor.execute(() -> {
+            try (InputStream inputStream = getContentResolver().openInputStream(uri)) {
+                if (inputStream == null) return;
+
+                Book book = new EpubReader().readEpub(inputStream);
+
+                String formattedHtml = extractEpubChaptersAsHtml(book);
+                File imageFile = saveEpubCoverImage(book, fileName);
+
+                saveNewEpubToDatabase(fileName, formattedHtml, imageFile);
+
+                handler.post(() -> {
+                    hideLoading();
+                    loadPdfContentsFromDatabase();
+                });
+            } catch (IOException e) {
+                Log.e("MainActivity", "Erro ao processar o EPUB", e);
+                handler.post(this::hideLoading);
+            }
+        });
+    }
+
+    /**
+     * Percorre o Spine (ordem de leitura) do EPUB e concatena o conteúdo HTML de cada
+     * capítulo, extraindo apenas o miolo (<body>) de cada recurso XHTML — do mesmo jeito
+     * que extractAndFormatText() monta o HTML concatenado a partir das páginas do PDF.
+     */
+    private String extractEpubChaptersAsHtml(Book book) throws IOException {
+        StringBuilder formattedHtml = new StringBuilder();
+        for (SpineReference spineReference : book.getSpine().getSpineReferences()) {
+            Resource resource = spineReference.getResource();
+            String chapterHtml = new String(resource.getData(), StandardCharsets.UTF_8);
+            formattedHtml.append(extractBodyContent(chapterHtml));
+        }
+        return formattedHtml.toString();
+    }
+
+    /** Extrai apenas o conteúdo interno da tag &lt;body&gt; de um XHTML de capítulo. */
+    private String extractBodyContent(String rawXhtml) {
+        Matcher matcher = Pattern
+                .compile("<body[^>]*>(.*?)</body>", Pattern.CASE_INSENSITIVE | Pattern.DOTALL)
+                .matcher(rawXhtml);
+        return matcher.find() ? matcher.group(1) : rawXhtml;
+    }
+
+    /**
+     * Extrai a imagem de capa do EPUB (via epublib) e salva como PNG no armazenamento
+     * interno, no mesmo padrão usado para a miniatura dos PDFs.
+     */
+    private File saveEpubCoverImage(Book book, String fileName) {
+        Resource coverResource = book.getCoverImage();
+        if (coverResource == null) return null;
+
+        try {
+            byte[] imageData = coverResource.getData();
+            Bitmap bitmap = BitmapFactory.decodeByteArray(imageData, 0, imageData.length);
+            if (bitmap == null) return null;
+
+            File imageFile = new File(getFilesDir(), fileName + ".png");
+            try (FileOutputStream fos = new FileOutputStream(imageFile)) {
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
+            }
+            return imageFile;
+
+        } catch (IOException e) {
+            Log.e("MainActivity", "Erro ao salvar a capa do EPUB", e);
+            return null;
+        }
+    }
+
+    /**
+     * Persiste os dados extraídos do novo EPUB no banco local, marcando fileType = EPUB.
+     * filePath fica vazio: EPUBs não têm um "Modo PDF Original" para carregar.
+     */
+    private void saveNewEpubToDatabase(String fileName, String formattedHtml, File imageFile) {
+        PdfContent pdfContent = new PdfContent();
+        pdfContent.title = fileName;
+        pdfContent.content = formattedHtml;
+        pdfContent.imagePath = (imageFile != null) ? imageFile.getAbsolutePath() : "";
+        pdfContent.filePath = "";
+        pdfContent.fileType = PdfContent.FILE_TYPE_EPUB;
         pdfContent.lastTimeOpened = System.currentTimeMillis();
 
         db.pdfContentDao().insert(pdfContent);

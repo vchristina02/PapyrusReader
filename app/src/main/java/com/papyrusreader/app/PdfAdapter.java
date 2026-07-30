@@ -48,6 +48,7 @@ public class PdfAdapter extends ListAdapter<PdfContent, PdfAdapter.ViewHolder> {
         // Preenche os textos e o progresso da barra de leitura
         holder.textViewPdfName.setText(currentItem.title);
         holder.seekBar.setProgress(calculateDisplayProgress(currentItem));
+        holder.textViewFormatLabel.setText(resolveFormatLabel(currentItem));
 
         // Desativa a interação manual na miniatura da SeekBar da tela inicial
         holder.seekBar.setClickable(false);
@@ -94,6 +95,19 @@ public class PdfAdapter extends ListAdapter<PdfContent, PdfAdapter.ViewHolder> {
     }
 
     /**
+     * Resolve o rótulo de formato exibido no card:
+     * - EPUB: sempre "EPUB" (não tem "Modo PDF Original").
+     * - PDF com isPdfModePreferred = true: "PDF".
+     * - PDF com isPdfModePreferred = false: "MODO TEXTO".
+     */
+    private String resolveFormatLabel(PdfContent pdfContent) {
+        if (PdfContent.FILE_TYPE_EPUB.equals(pdfContent.fileType)) {
+            return "EPUB";
+        }
+        return pdfContent.isPdfModePreferred ? "PDF" : "MODO TEXTO";
+    }
+
+    /**
      * Retorna o objeto PdfContent da posição clicada.
      */
     public PdfContent getPdfContentAt(int position) {
@@ -119,12 +133,14 @@ public class PdfAdapter extends ListAdapter<PdfContent, PdfAdapter.ViewHolder> {
         TextView textViewPdfName;
         ImageView imageViewPdf;
         SeekBar seekBar;
+        TextView textViewFormatLabel;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             textViewPdfName = itemView.findViewById(R.id.textViewPdfName);
             imageViewPdf = itemView.findViewById(R.id.imageViewPdf);
             seekBar = itemView.findViewById(R.id.seekBarMain);
+            textViewFormatLabel = itemView.findViewById(R.id.textViewFormatLabel);
         }
     }
 
@@ -145,6 +161,7 @@ public class PdfAdapter extends ListAdapter<PdfContent, PdfAdapter.ViewHolder> {
                             oldItem.pdfPageNumber == newItem.pdfPageNumber &&
                             oldItem.pdfTotalPages == newItem.pdfTotalPages &&
                             oldItem.isPdfModePreferred == newItem.isPdfModePreferred &&
+                            Objects.equals(oldItem.fileType, newItem.fileType) &&
                             Objects.equals(oldItem.title, newItem.title) &&
                             Objects.equals(oldItem.imagePath, newItem.imagePath);
                 }

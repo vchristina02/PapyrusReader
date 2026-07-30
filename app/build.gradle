@@ -45,9 +45,8 @@ dependencies {
     implementation(libs.glide)
     implementation(libs.androidPdfViewer)
 
-    implementation(libs.epublibCore) {
-        exclude group: 'org.slf4j', module: 'slf4j-android'
-        exclude group: 'xmlpull', module: 'xmlpull'
+    implementation(libs.epub4j.core) {
+        exclude group: 'xmlpull'
     }
 
     implementation (libs.room.runtime)
